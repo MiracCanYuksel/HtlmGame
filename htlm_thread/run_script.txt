@@ -1,2 +1,0 @@
-cd C:\Users\mirac.yuksel\Desktop\htlm_thread
-python flask.py
