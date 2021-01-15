@@ -1,9 +1,9 @@
-﻿const canvas = document.getElementById('canvas1');
+const canvas = document.getElementById('canvas1');
 const ctx = canvas.getContext('2d');
 canvas.width=800;
 canvas.height=500;
 
-let id, health, score;
+let health, score, pid;
 
 class Player {
     constructor(id,x,y,frameX,frameY,speed,moving=false,isAlive=0){
@@ -24,9 +24,35 @@ class Player {
     }
     makeMain(){
         let self=this;
+		pid = this.id;
         this.isAlive=1;
-	id = this.id;
         window.addEventListener("keydown",function(e){
+            if(e.keyCode==69){
+                let powersupIdd=-1;
+                for(let i=0;i<powersup.length;i++){
+                    console.log(powersup[i]);
+                    if(self.x<powersup[i].x+20 & self.x>powersup[i].x-20 & self.y<powersup[i].y+20 & self.x>powersup[i].y-20){
+                        powersupIdd=powersup[i].powersupId;
+                        break;
+                    }
+                }
+                if(powersupIdd!=-1){
+                    fetch("/pickpowerup/"+self.id+"/"+powersupIdd, {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    })
+                        .then(response => response.json())
+                        .then(data =>{}
+                        )
+                        .catch(error => console.error('Unable to add item.', error));
+                }
+                return;
+
+            }
             if(e.keyCode<37 & e.keyCode>40 & !self.isAlive) return;
             if(!self.fired[e.keyCode]){
                 self.fired[e.keyCode]=true;
@@ -36,9 +62,7 @@ class Player {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({"key":e.keyCode,
-                                        "id":self.id,
-                                        "moving":true})
+                    body: JSON.stringify({})
                 })
                     .then(response => response.json())
                     .then(data =>{}
@@ -55,9 +79,7 @@ class Player {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({"key":e.keyCode,
-                                        "id":self.id,
-                                        "moving":false})
+                    body: JSON.stringify({})
                 })
                     .then(response => response.json())
                     .then(data =>{}
@@ -83,9 +105,7 @@ class Player {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({"key":e.keyCode,
-                                        "id":self.id,
-                                        "moving":false})
+                    body: JSON.stringify({})
                 })
                     .then(response => response.json())
                     .then(data =>{}
@@ -111,6 +131,7 @@ class Player {
 //const player = new Player(6969,150,250,0,0,6,false);
 var players=[new Player(0,150,250,0,0,1),new Player(1,700,250,0,0,1)];
 var fireballs=[];
+var powersup=[];
 //buraya if id exist condition'ı eklicez // aytac
 fetch("/newplayer").then(response => response.json())
 .then(Mplayer => players[parseInt(Mplayer['id'])].makeMain())
@@ -126,6 +147,10 @@ const background = new Image();
 background.src = "static/img/tmpBackground.jpg";
 const fireballSprite = new Image();
 fireballSprite.src = "static/img/fireball.png";
+const potionSprite = new Image();
+potionSprite.src = "static/img/health_potion.png";
+const swordSprite = new Image();
+swordSprite.src = "static/img/sword.png";
 function drawSprite(img, sX, sY, sW, sH, dX, dY, dW, dH){
     ctx.drawImage(img, sX, sY, sW, sH, dX, dY, dW, dH);
 
@@ -134,11 +159,10 @@ function drawSpriteFireball(img, sX, sY, sAngle){
     ctx.translate(sX, sY);
     ctx.rotate(Math.PI / 180 * (sAngle + 90));
     ctx.translate(-sX, -sY);
-    // ctx.drawImage(img, sX, sY,sAngle);
-    ctx.drawImage(img, sX,sY, 20, 20);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+   // ctx.drawImage(img, sX, sY,sAngle);
+   ctx.drawImage(img, sX,sY, 20, 20);
+   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
-
 function drawStatus(health, score){
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, 275, 50);
@@ -146,8 +170,13 @@ function drawStatus(health, score){
     ctx.fillStyle = 'black';
     ctx.fillText("Health: "+health+" \nScore: "+score, 10, 30);
 }
-
-
+function drawSpritePotion(sX, sY){
+   ctx.drawImage(potionSprite, sX,sY, 40, 40);
+}
+function drawSpriteSword(sX, sY){
+    ctx.drawImage(swordSprite, sX,sY, 40, 40);
+ }
+ 
 let fps, fpsInterval, startTime, now, then, elapsed;
 
 function startAnimating(fps){
@@ -171,17 +200,27 @@ function animate(){
                     players[parseInt(d.id)].updatePlayer(parseInt(d.keys),
                     parseInt(d.x),parseInt(d.y),parseInt(d.frameX),
                     parseInt(d.frameY), parseInt(d.speed),parseInt(d.moving),parseInt(d.isAlive))
- 	            if(parseInt(d.id) == id){health = d.health;score=d.score;}
+					if(parseInt(d.id) == pid){health = d.health;score=d.score;}
                 });
                 data["fireballs"].forEach(d=>{//fireballarda bu 'then'in icine eklenecek //aytac
                 fireballs.push({"x":parseFloat(d.x),"y":parseFloat(d.y),"angle":parseFloat(d.angle)})
             });
+            let pU=[];
+            data["powerup"].forEach(d=>{//fireballarda bu 'then'in icine eklenecek //aytac
+                pU.push({"x":parseFloat(d.x),"y":parseFloat(d.y),"powersupId":parseInt(d.powerupId),"type":d.type})
+            });
+            powersup=pU;
             })
                 .then(()=>{   
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-                        drawStatus(health, score);
+						drawStatus(health, score);
                         //burada update edilcek bütün objectler // aytac
+                        powersup.forEach(power=>{
+                        if(power["type"]=="potion")
+                            drawSpritePotion(power.x,power.y);
+                        else
+                            drawSpriteSword(power.x,power.y);} );
                         players.forEach(player=>{
                         if(player.isAlive){
                         drawSprite(playerSprites[player.id],  player.width*player.frameX,player.height*player.frameY, player.width, player.height,
@@ -189,6 +228,7 @@ function animate(){
                         fireballs.forEach(fireball=>
                             drawSpriteFireball(fireballSprite,fireball.x,fireball.y,fireball.angle));
                         fireballs=[];
+                        
                 })
                 .catch(error => {
                 console.error('Unable to get items.5', error);
