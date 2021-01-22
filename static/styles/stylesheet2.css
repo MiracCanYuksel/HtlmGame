@@ -160,32 +160,47 @@ div a:hover span.text:after {
   overflow: auto; /* Enable scroll if needed */
   background-color: rgb(0,0,0); /* Fallback color */
   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  font-weight: bold;
+  font-size: 20px;
+  color: rgb(255, 0, 0);
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
 
 /* Modal Content */
 .modal-content {
-  background-color: #fefefe;
-  background-image: url('2101913.jpg');
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background: white;
+  background: linear-gradient(
+    to right bottom,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.3)
+  );
+  border-radius: 2rem;
+  z-index: 2;
+  backdrop-filter: blur(2rem);
   background-size: cover;
   margin: auto;
   padding: 20px;
   border: 1px solid #888;
   width: 50%;
 }
-
+.pp {
+  margin: 10px;
+  color: white;
+}
 /* The Close Button */
 .close {
+  background-color:#0f1923 ;
   color: #aaaaaa;
   float: right;
+  padding: 10px;
   font-size: 28px;
   font-weight: bold;
+  border-radius:10px;
 }
 
 .close:hover,
 .close:focus {
-  color: #000;
+  color: rgb(255, 0, 0);
   text-decoration: none;
   cursor: pointer;
 }

@@ -21,6 +21,7 @@ class Player {
         this.then = Date.now();
         this.fireballCooldown=5;
         this.isAlive=isAlive;
+		this.health = 100;
     }
     makeMain(){
         let self=this;
@@ -30,7 +31,6 @@ class Player {
             if(e.keyCode==69){
                 let powersupIdd=-1;
                 for(let i=0;i<powersup.length;i++){
-                    console.log(powersup[i]);
                     if(self.x<powersup[i].x+20 & self.x>powersup[i].x-20 & self.y<powersup[i].y+20 & self.x>powersup[i].y-20){
                         powersupIdd=powersup[i].powersupId;
                         break;
@@ -89,14 +89,10 @@ class Player {
         var bound = canvas.getBoundingClientRect();
         canvas.addEventListener("click",function(e){
             if(!self.isAlive) return;
-            //console.log(e.x+ " "+ e.y)
             now = Date.now();
             elapsed = now - self.then;
-            //var x=e.clientX - bound.left;
-            //var y=e.clientY - bound.top;
 			var x = e.clientX - (canvas.offsetLeft - window.pageXOffset);
 			var y = e.clientY - (canvas.offsetTop - window.pageYOffset);
-			//console.log("qqqqqqqqqqqqqqqqqqqqqqqqqqqq");
             if(elapsed>self.fireballCooldown){
                 self.then=self.fireballCooldown;
                 fetch("/fireball/"+self.id+"/"+x+"/"+y, {
@@ -114,7 +110,7 @@ class Player {
             }
         });
     }
-    updatePlayer(keys,x, y, frameX, frameY, speed, moving,isAlive){
+    updatePlayer(keys,x, y, frameX, frameY, speed, moving,isAlive,health){
         this.keys=keys;
         this.x=x;
         this.y=y;
@@ -123,6 +119,7 @@ class Player {
         this.speed = speed;
         this.moving = moving;
         this.isAlive=isAlive;
+		this.health = health;
     }
     
 }
@@ -151,9 +148,27 @@ const potionSprite = new Image();
 potionSprite.src = "static/img/health_potion.png";
 const swordSprite = new Image();
 swordSprite.src = "static/img/sword.png";
-function drawSprite(img, sX, sY, sW, sH, dX, dY, dW, dH){
-    ctx.drawImage(img, sX, sY, sW, sH, dX, dY, dW, dH);
 
+function drawHealthbar(x, y, per, width, thickness){
+      ctx.beginPath();
+      ctx.rect(x-width/2, y, width*(per/100), thickness);
+      if(per > 63){
+          ctx.fillStyle="green"
+      }else if(per > 37){
+          ctx.fillStyle="gold"
+      }else if(per > 13){
+        ctx.fillStyle="orange";
+      }else{
+        ctx.fillStyle="red";
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+	
+function drawSprite(img, sX, sY, sW, sH, dX, dY, dW, dH){
+	//drawSprite(playerSprites[player.id],  player.width*player.frameX,player.height*player.frameY, player.width, player.height,
+    //   player.x, player.y, player.width, player.height);}});
+    ctx.drawImage(img, sX, sY, sW, sH, dX, dY, dW, dH);
 }
 function drawSpriteFireball(img, sX, sY, sAngle){
     ctx.translate(sX, sY);
@@ -199,7 +214,7 @@ function animate(){
                     data["players"].forEach(d=>{//fireballarda bu 'then'in icine eklenecek //aytac
                     players[parseInt(d.id)].updatePlayer(parseInt(d.keys),
                     parseInt(d.x),parseInt(d.y),parseInt(d.frameX),
-                    parseInt(d.frameY), parseInt(d.speed),parseInt(d.moving),parseInt(d.isAlive))
+                    parseInt(d.frameY), parseInt(d.speed),parseInt(d.moving),parseInt(d.isAlive),parseInt(d.health))
 					if(parseInt(d.id) == pid){health = d.health;score=d.score;}
                 });
                 data["fireballs"].forEach(d=>{//fireballarda bu 'then'in icine eklenecek //aytac
@@ -223,16 +238,20 @@ function animate(){
                             drawSpriteSword(power.x,power.y);} );
                         players.forEach(player=>{
                         if(player.isAlive){
-                        drawSprite(playerSprites[player.id],  player.width*player.frameX,player.height*player.frameY, player.width, player.height,
-                        player.x, player.y, player.width, player.height);}});
+							drawHealthbar(player.x+15, player.y-20, player.health, player.width, 10);
+							drawSprite(playerSprites[player.id],  player.width*player.frameX,player.height*player.frameY, player.width, player.height,
+								player.x, player.y, player.width, player.height);}});
                         fireballs.forEach(fireball=>
                             drawSpriteFireball(fireballSprite,fireball.x,fireball.y,fireball.angle));
                         fireballs=[];
+						requestAnimationFrame(animate);
                         
                 })
                 .catch(error => {
-                console.error('Unable to get items.5', error);
-                requestAnimationFrame(animate);});
+					console.error('Unable to get items.5', error);
+					window.stop();
+					requestAnimationFrame(animate);
+				});
     }
 }
 
